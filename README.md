@@ -48,6 +48,12 @@ Schafkopf_Env/                    # Projekt-Root
    ```
 2. Virtuelle Umgebung erstellen & aktivieren
 
+   **Mit `conda`**
+   ```bash
+   conda create -n schafkopf python=3.8 -y
+   conda activate schafkopf
+   ```
+   
    **Mit `venv`**
    - macOS / Linux:
      ```bash
@@ -59,12 +65,6 @@ Schafkopf_Env/                    # Projekt-Root
      python -m venv venv
      .\venv\Scripts\Activate.ps1
      ```
-
-   **Mit `conda`**
-   ```bash
-   conda create -n schafkopf python=3.8 -y
-   conda activate schafkopf
-   ```
    
 3. Abhängigkeiten installieren
    ```bash
