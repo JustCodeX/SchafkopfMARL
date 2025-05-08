@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.env
+
+# Logs, Daten & Checkpoints
+data/
+tensorboard_logs/
+consoleResults/
+
+# IDE / OS
+.vscode/
+.DS_Store

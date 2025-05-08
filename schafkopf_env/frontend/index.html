@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Schafkopf Tisch</title>
+  <style>
+    .infos {
+      position: absolute;
+      top: 10px;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 30px;
+      pointer-events: none; /* damit sie nicht anklickbar sind */
+    }
+
+    .info-block {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid #888;
+      border-radius: 10px;
+      padding: 10px 15px;
+      font-size: 0.9em;
+      max-width: 40vw;
+      pointer-events: auto;
+      color: #daa520;
+    }
+
+    .info-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+      color: gold;
+    }
+
+    h1 {
+        margin-top: 20px;
+        margin-bottom: 40px;
+        text-align: 2.2em;
+        text-align: center;
+        color: gold;
+    }
+    
+    body {
+    margin: 0;
+    font-family: 'Georgia', serif;
+    background: url("assets/kneipe.png");
+    background-size: cover;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    }
+
+    #tisch {
+      position: relative;
+      width: 90vmin;
+      height: 60vmin;
+      background-image: url("assets/tisch.png");
+      background-size: cover;
+      background-position: center;
+      border-radius: 50% / 25%;
+      border: 6px double #d4af37;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 10px;
+      box-shadow: inset 0 0 20px #00000099, 0 0 40px #00000055;
+    }
+
+    .karte {
+      position: relative;
+      width: 60px;
+      height: 90px;
+      background-color: #fffdf5;
+      border-radius: 8px;
+      border: 2px solid #444;
+      font-weight: bold;
+      color: black;
+      text-align: center;
+      box-shadow: 4px 4px 8px rgba(0,0,0,0.4);
+      background-size: 100% 100%;
+      overflow: hidden;
+    }
+
+    .karte .wert-oben {
+      position: absolute;
+      top: 4px;
+      left: 6px;
+      font-size: 0.9em;
+    }
+
+    .karte .wert-unten {
+      position: absolute;
+      bottom: 4px;
+      right: 6px;
+      font-size: 0.9em;
+      transform: rotate(180deg);
+    }
+
+    .karte .emoji-mitte {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.4em;
+      opacity: 0.9;
+    }
+
+    .karte-legal {
+      background: linear-gradient(135deg, #e6ffe6, #ccf5cc);
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-weight: bold;
+      color: #155724;
+      box-shadow: 0 0 5px #28a745aa;
+      margin-bottom: 2px;
+    }
+
+    .spieler {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100px;
+    }
+
+    .spieler .name {
+      margin-top: 5px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .name {
+    margin-top: 6px;
+    font-size: 0.95em;
+    text-align: center;
+    font-weight: bold;
+    color: white;
+    line-height: 1.2;
+    }
+
+    .name .id {
+    font-size: 0.7em;
+    color: #aaa;
+    display: block;
+    }
+
+    .name .rolle {
+    font-size: 0.7em;
+    color: gold;
+    display: block;
+    }
+
+    .aktiver-spieler {
+    box-shadow: 0 0 20px 5px gold, 0 0 10px 2px #ffd700 inset;
+    border: 3px solid #ffd700;
+    border-radius: 10px;
+    }
+
+    .stich-mitte {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    #spieler-0 { top: -50px; left: 50%; transform: translateX(-50%); }
+    #spieler-1 { top: 50%; right: -50px; transform: translateY(-50%); }
+    #spieler-2 { bottom: -50px; left: 50%; transform: translateX(-50%); }
+    #spieler-3 { top: 50%; left: -50px; transform: translateY(-50%); }
+
+    #turn-info {
+      margin-top: 20px;
+      font-size: 1.2em;
+    }
+  </style>
+</head>
+<body>
+  <h1>Schafkopf</h1>
+  <div id="winner-display" style="
+  display: none;
+  margin-top: 10px;
+  margin-bottom: 40px;
+  font-size: 1.4em;
+  color: gold;
+  font-weight: bold;
+    ">
+    🏆 Gewonnen von: <span id="winner-names"></span>
+  </div>
+
+  <div class="infos">
+    <div class="info-block" id="handkarten">
+        <div class="info-title">🃏 Deine Handkarten</div>
+        <div id="cards">Lade Karten...</div>
+        <div id="gerufenes-ass" style="margin-top: 8px; color: gold;">🎯 Gerufenes Ass:</div>
+        <div id="ass-anzeige">Lade Ass...</div>
+      </div>      
+  
+    <div class="info-block" id="last-stich">
+      <div class="info-title">⏮️ Letzter Stich</div>
+      <div id="last-trick">Lade...</div>
+    </div>
+  </div>  
+
+  <div id="tisch">
+    <div class="spieler" id="spieler-0">
+      <div class="karte" id="karte-0">...</div>
+      <div class="name" id="name-0">
+        <span class="id">#0</span>
+        <span class="label">Spieler 0</span>
+        <span class="rolle"></span>
+      </div>
+    </div>
+  
+    <div class="spieler" id="spieler-1">
+      <div class="karte" id="karte-1">...</div>
+      <div class="name" id="name-1">
+        <span class="id">#1</span>
+        <span class="label">Spieler 1</span>
+        <span class="rolle"></span>
+      </div>
+    </div>
+  
+    <div class="spieler" id="spieler-2">
+      <div class="karte" id="karte-2">...</div>
+      <div class="name" id="name-2">
+        <span class="id">#2</span>
+        <span class="label">Spieler 2</span>
+        <span class="rolle"></span>
+      </div>
+    </div>
+  
+    <div class="spieler" id="spieler-3">
+      <div class="karte" id="karte-3">...</div>
+      <div class="name" id="name-3">
+        <span class="id">#3</span>
+        <span class="label">Spieler 3</span>
+        <span class="rolle"></span>
+      </div>
+    </div>
+  </div>  
+
+  <script>
+    const host = window.location.hostname;
+
+    let playerId = null;
+    let playerName = null;
+
+    async function promptNameAndId() {
+        playerId = prompt("Bitte gib deine Spieler-ID ein (0–3):");
+        playerName = prompt("Wie heißt du?");
+
+        if (playerId !== null && playerName !== null) {
+        try {
+            await fetch(`http://${host}:8000/player/${playerId}/name`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: playerName })
+            });
+            console.log(`Gesendet: Spieler ${playerId} → ${playerName}`);
+        } catch (e) {
+            console.error("Fehler beim Senden des Namens:", e);
+        }
+        }
+    }
+
+    async function fetchNamen() {
+        for (let i = 0; i < 4; i++) {
+            try {
+                const res = await fetch(`http://${host}:8000/player/${i}/name`);
+                const data = await res.json();
+                const nameBox = document.getElementById(`name-${i}`);
+
+                if (nameBox) {
+                    const isHuman = data.name && data.name.trim() !== "";
+                    const label = isHuman ? data.name : `Spieler ${i}`;
+                    const farbe = isHuman ? "gold" : "#dddddd";
+
+                    nameBox.querySelector('.label').textContent = label;
+                    nameBox.querySelector('.id').style.color = "#999999";
+                    nameBox.style.color = farbe;
+                }
+            } catch (e) {
+                console.error(`Fehler beim Laden von Spieler ${i}:`, e);
+            }
+        }
+    }
+
+    async function fetchTurn() {
+        try {
+        const res = await fetch(`http://${host}:8000/turn`);
+        const data = await res.json();
+        const turn = data.spieler_am_zug;
+        document.querySelectorAll('.spieler').forEach(div => div.classList.remove('aktiver-spieler'));
+        const active = document.getElementById(`spieler-${turn}`);
+        if (active) active.classList.add('aktiver-spieler');
+        } catch {}
+    }
+
+    async function fetchStich() {
+        try {
+            const res = await fetch(`http://${host}:8000/trick`);
+            const data = await res.json();
+            const karten = document.querySelectorAll(".karte");
+            karten.forEach(k => k.textContent = "");
+
+            data.trick.forEach(entry => {
+            const el = document.getElementById(`karte-${entry.spieler}`);
+            if (el) el.innerHTML = formatKarte(entry.karte);
+            });
+        } catch (e) {
+            console.error("Fehler beim Laden des Stichs", e);
+        }
+    }
+
+    function formatKarteEmoji(kartenText) {
+        const farben = {
+              "Herz": "♥️",
+              "Schellen": "🎊",
+              "Gras": "🌿",
+              "Eichel": "🥜"
+        };
+
+        for (const [farbe, emoji] of Object.entries(farben)) {
+            if (kartenText.startsWith(farbe)) {
+            const symbol = kartenText.slice(farbe.length).trim();
+            return `🃏 ${emoji} ${symbol}`;
+            }
+        }
+
+        return `🃏 ${kartenText}`; // Fallback
+    }
+
+    async function fetchHandkarten() {
+    try {
+        const cardsRes = await fetch(`http://${host}:8000/player/${playerId}/cards`);
+        const cardsData = await cardsRes.json();
+        const cards = cardsData.cards;
+
+        const legalRes = await fetch(`http://${host}:8000/player/${playerId}/legal_moves`);
+        const legalMovesRaw = await legalRes.json(); // e.g. [[0, 0, 2], [0, 0, 5]]
+        console.log("Legal Moves (raw):", legalMovesRaw);
+
+        const legalIndices = legalMovesRaw.map(entry => {
+            if (typeof entry === "string") {
+                const parts = entry.replace(/[()]/g, "").split(",");
+                return parseInt(parts[2]);
+            }
+            return Array.isArray(entry) ? entry[2] : entry;
+        });
+        console.log("Legal Indices:", legalIndices);
+
+        const turnRes = await fetch(`http://${host}:8000/turn`);
+        const turnData = await turnRes.json();
+        const isMyTurn = parseInt(playerId) === turnData.spieler_am_zug;
+
+        document.getElementById("cards").innerHTML = cards
+            .map((card, index) => {
+                const isLegal = isMyTurn && legalIndices.includes(index);
+                const className = isLegal ? "karte-legal" : "";
+                return `<div class="${className}">${index}. ${formatKarteEmoji(card)}</div>`;
+            })
+            .join("");
+    } catch (e) {
+        document.getElementById("cards").innerText = "Fehler beim Laden.";
+        console.error("Fehler in fetchHandkarten():", e);
+    }
+}
+
+    async function fetchLastTrick() {
+        try {
+            const res = await fetch(`http://${host}:8000/last_trick`);
+            const data = await res.json();
+            const html = data.last_trick.map(entry =>
+                `Spieler ${entry.spieler}: ${formatKarteEmoji(entry.karte)}`
+            ).join("<br>");
+            document.getElementById("last-trick").innerHTML = html;
+        } catch (e) {
+            document.getElementById("last-trick").innerText = "Fehler beim Laden.";
+        }
+    }
+
+    let lastWinner = null; // speichert zuletzt angezeigten Gewinner
+
+    async function fetchWinner() {
+        try {
+            const res = await fetch(`http://${host}:8000/winner`);
+            const data = await res.json();
+            const winners = data.winner;
+
+            const display = document.getElementById("winner-display");
+
+            if (winners && winners.length > 0) {
+                const winnerText = winners.join(" & ");
+                
+                if (lastWinner !== winnerText) {
+                    document.getElementById("winner-names").textContent = winnerText;
+                    display.style.display = "block";
+                    lastWinner = winnerText;
+
+                    setTimeout(() => {
+                        display.style.display = "none";
+                    }, 5000);
+                }
+
+            } else {
+                display.style.display = "none";
+                lastWinner = null;
+            }
+        } catch (e) {
+            console.error("Fehler beim Laden des Gewinners:", e);
+        }
+    }
+
+    function formatKarte(text) {
+        const farben = {
+            "Herz": "♥️",
+            "Schellen": "🎊",
+            "Gras": "🌿",
+            "Eichel": "🥜"
+        };
+
+        if (!text || typeof text !== "string") return '';
+
+        if (text === "Passen") {
+            return `
+            <div class="wert-oben">X</div>
+            <div class="wert-unten">X</div>
+            <div class="emoji-mitte">❌</div>`;
+        }
+
+        if (text.startsWith("Rufspiel")) {
+            const match = text.match(/\(([^)]+)\)/);
+            const ruf = match ? match[1] : "?";
+            return `
+            <div class="wert-oben">Ruf</div>
+            <div class="wert-unten">Ruf</div>
+            <div class="emoji-mitte" style="font-size: 1.0em; color: darkred;">${ruf}</div>`;
+        }
+
+        const teile = text.split(" ");
+        const farbe = teile[0];
+        const wert = teile.slice(1).join(" ");
+        const symbol = farben[farbe] || "🂠";
+
+        return `
+        <div class="wert-oben">${wert}</div>
+        <div class="wert-unten">${wert}</div>
+        <div class="emoji-mitte">${symbol}</div>`;
+    }
+
+    async function fetchGerufenesAss() {
+        try {
+            const res = await fetch(`http://${host}:8000/gerufenes_ass`);
+            const data = await res.json();
+            const ass = data.ass || "-";
+            document.getElementById("ass-anzeige").textContent = formatKarteEmoji(ass);
+        } catch (e) {
+            console.error("Fehler beim Laden des gerufenen Asses:", e);
+            document.getElementById("ass-anzeige").textContent = "Fehler...";
+        }
+    }
+
+    async function fetchRoles() {
+        try {
+            const res = await fetch(`http://${host}:8000/rollen`);
+            const rollen = await res.json(); // z.B. { "0": "Nicht-Spieler", "1": "Spielmacher", "2": "Eichel Ass", ... }
+
+            Object.entries(rollen).forEach(([id, rolle]) => {
+                const nameBox = document.getElementById(`name-${id}`);
+                if (!nameBox) return;
+
+                const rolleSpan = nameBox.querySelector('.rolle');
+
+                if (rolle === "Spielmacher") {
+                    rolleSpan.innerHTML = `<span style="color:#ffd700;font-size:1.0em;">Spielmacher</span>`;
+                } else if (rolle !== "Nicht-Spieler") {
+                    rolleSpan.innerHTML = `<span style="color:#ffd700;font-size:1.0em;">${rolle}</span>`;
+                } else {
+                    rolleSpan.innerHTML = "";
+                }
+            });
+        } catch (e) {
+            console.error("Fehler beim Abrufen der Rollen:", e);
+        }
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+        init(); // <-- Starte erst, wenn DOM bereit ist
+    });
+
+    async function init() {
+        await promptNameAndId();
+        await fetchNamen();
+        fetchHandkarten();
+        fetchLastTrick();
+        fetchStich();
+        fetchTurn();
+        await fetchGerufenesAss();
+        await fetchRoles();
+
+        setInterval(fetchGerufenesAss, 3000);
+        setInterval(fetchRoles, 3000);
+        setInterval(fetchNamen, 5000);
+        setInterval(fetchStich, 1000);
+        setInterval(fetchTurn, 1000);
+        setInterval(fetchHandkarten, 2000);
+        setInterval(fetchLastTrick, 2000);
+        setInterval(fetchWinner, 3000);
+    }
+    </script>
+
+</body>
+</html>
